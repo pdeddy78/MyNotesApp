@@ -4,6 +4,12 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns._ID;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.DATE;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.DESCRIPTION;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.TITLE;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.TABLE_NAME;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static String DATABASE_NAME = "dbnoteapp";
@@ -14,11 +20,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     " %s TEXT NOT NULL," +
                     " %s TEXT NOT NULL," +
                     " %s TEXT NOT NULL)",
-            DatabaseContract.TABLE_NOTE,
-            DatabaseContract.NoteColumns._ID,
-            DatabaseContract.NoteColumns.TITLE,
-            DatabaseContract.NoteColumns.DESCRIPTION,
-            DatabaseContract.NoteColumns.DATE
+            TABLE_NAME,
+            _ID,
+            TITLE,
+            DESCRIPTION,
+            DATE
     );
 
     public DatabaseHelper(Context context) {
@@ -32,7 +38,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.TABLE_NOTE);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
 }

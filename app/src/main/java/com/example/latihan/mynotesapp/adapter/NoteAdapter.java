@@ -2,6 +2,7 @@ package com.example.latihan.mynotesapp.adapter;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,8 @@ import com.example.latihan.mynotesapp.R;
 import com.example.latihan.mynotesapp.entity.Note;
 
 import java.util.ArrayList;
+
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.CONTENT_URI;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
@@ -39,22 +42,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         notifyDataSetChanged();
     }
 
-    public void addItem(Note note) {
-        this.listNotes.add(note);
-        notifyItemInserted(listNotes.size() - 1);
-    }
-
-    public void updateItem(int position, Note note) {
-        this.listNotes.set(position, note);
-        notifyItemChanged(position, note);
-    }
-
-    public void removeItem(int position) {
-        this.listNotes.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(position,listNotes.size());
-    }
-
     @NonNull
     @Override
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -64,13 +51,17 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        holder.tvTitle.setText(listNotes.get(position).getTitle());
-        holder.tvDate.setText(listNotes.get(position).getDate());
-        holder.tvDescription.setText(listNotes.get(position).getDescription());
+        holder.tvTitle.setText(getListNotes().get(position).getTitle());
+        holder.tvDate.setText(getListNotes().get(position).getDate());
+        holder.tvDescription.setText(getListNotes().get(position).getDescription());
         holder.cvNote.setOnClickListener(new CustomOnItemClickListener(position, new CustomOnItemClickListener.OnItemClickCallback() {
             @Override
             public void onItemClicked(View view, int position) {
                 Intent intent = new Intent(activity, NoteAddUpdateActivity.class);
+                // Set intent dengan data uri row note by id
+                // content://com.example.latihan.mynotesapp/note/id
+                Uri uri = Uri.parse(CONTENT_URI + "/" + getListNotes().get(position).getId());
+                intent.setData(uri);
                 intent.putExtra(NoteAddUpdateActivity.EXTRA_POSITION, position);
                 intent.putExtra(NoteAddUpdateActivity.EXTRA_NOTE, listNotes.get(position));
                 activity.startActivityForResult(intent, NoteAddUpdateActivity.REQUEST_UPDATE);

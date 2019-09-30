@@ -3,8 +3,11 @@ package com.example.latihan.mynotesapp;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -22,6 +25,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.CONTENT_URI;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.DATE;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.DESCRIPTION;
+import static com.example.latihan.mynotesapp.db.DatabaseContract.NoteColumns.TITLE;
+
 public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText edtTitle, edtDescription;
@@ -31,19 +39,14 @@ public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnC
     public static final String EXTRA_POSITION = "extra_position";
 
     private boolean isEdit = false;
+
     public static final int REQUEST_ADD = 100;
-    public static final int RESULT_ADD = 101;
     public static final int REQUEST_UPDATE = 200;
-    public static final int RESULT_UPDATE = 201;
-    public static final int RESULT_DELETE = 301;
+
+    private final int ALERT_DIALOG_CLOSE = 10;
 
     private Note note;
     private int position;
-
-    private NoteHelper noteHelper;
-
-    private final int ALERT_DIALOG_CLOSE = 10;
-    private final int ALERT_DIALOG_DELETE = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +58,21 @@ public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnC
         btnSubmit = findViewById(R.id.btn_submit);
         btnSubmit.setOnClickListener(this);
 
-        noteHelper = NoteHelper.getInstance(getApplicationContext());
         note = getIntent().getParcelableExtra(EXTRA_NOTE);
         if (note != null) {
             position = getIntent().getIntExtra(EXTRA_POSITION, 0);
             isEdit = true;
         } else {
             note = new Note();
+        }
+
+        Uri uri = getIntent().getData();
+        if (uri != null) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                if (cursor.moveToFirst()) note = new Note(cursor);
+                cursor.close();
+            }
         }
 
         String actionBarTitle;
@@ -91,33 +102,36 @@ public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnC
             String title = edtTitle.getText().toString().trim();
             String description = edtDescription.getText().toString().trim();
 
+            boolean isEmpty = false;
+
             if (TextUtils.isEmpty(title)) {
                 edtTitle.setError("Field can not be blank");
                 return;
             }
+
             note.setTitle(title);
             note.setDescription(description);
             Intent intent = new Intent();
             intent.putExtra(EXTRA_NOTE, note);
             intent.putExtra(EXTRA_POSITION, position);
 
-            if (isEdit) {
-                long result = noteHelper.updateNote(note);
-                if (result > 0) {
-                    setResult(RESULT_UPDATE, intent);
+            if (!isEmpty) {
+
+                ContentValues values = new ContentValues();
+                values.put(TITLE, title);
+                values.put(DESCRIPTION, description);
+
+                if (isEdit) {
+                    getContentResolver().update(getIntent().getData(), values, null, null);
+                    Toast.makeText(NoteAddUpdateActivity.this, "Satu item berhasil diedit", Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    Toast.makeText(NoteAddUpdateActivity.this, "Gagal mengupdate data", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                note.setDate(getCurrentDate());
-                long result = noteHelper.insertNote(note);
-                if (result > 0) {
-                    note.setId((int) result);
-                    setResult(RESULT_ADD, intent);
+                    values.put(DATE, getCurrentDate());
+                    note.setDate(getCurrentDate());
+                    Toast.makeText(NoteAddUpdateActivity.this, "Satu item berhasil disimpan", Toast.LENGTH_SHORT).show();
+                    getContentResolver().insert(CONTENT_URI, values);
+
                     finish();
-                } else {
-                    Toast.makeText(NoteAddUpdateActivity.this, "Gagal menambah data", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -133,6 +147,7 @@ public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        int ALERT_DIALOG_DELETE = 20;
         switch (item.getItemId()) {
             case R.id.action_delete:
                 showAlertDialog(ALERT_DIALOG_DELETE);
@@ -177,15 +192,11 @@ public class NoteAddUpdateActivity extends AppCompatActivity implements View.OnC
                         if (isDialogClose) {
                             finish();
                         } else {
-                            long result = noteHelper.deleteNote(note.getId());
-                            if (result > 0) {
-                                Intent intent = new Intent();
-                                intent.putExtra(EXTRA_POSITION, position);
-                                setResult(RESULT_DELETE, intent);
-                                finish();
-                            } else {
-                                Toast.makeText(NoteAddUpdateActivity.this, "Gagal menghapus data", Toast.LENGTH_SHORT).show();
-                            }
+                            Intent intent = new Intent();
+                            intent.putExtra(EXTRA_POSITION, position);
+                            Toast.makeText(NoteAddUpdateActivity.this, "Satu item berhasil dihapus", Toast.LENGTH_SHORT).show();
+                            getContentResolver().delete(getIntent().getData(), null, null);
+                            finish();
                         }
                     }
                 })

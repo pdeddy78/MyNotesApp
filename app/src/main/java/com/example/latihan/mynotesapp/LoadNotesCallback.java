@@ -1,10 +1,8 @@
 package com.example.latihan.mynotesapp;
 
-import com.example.latihan.mynotesapp.entity.Note;
-
-import java.util.ArrayList;
+import android.database.Cursor;
 
 public interface LoadNotesCallback {
     void preExecute();
-    void postExecute(ArrayList<Note> notes);
+    void postExecute(Cursor notes);
 }
