@@ -3,7 +3,7 @@
     package="com.example.latihan.mynotesapp">
 
     <permission android:name="com.example.latihan.mynotesapp.READ_DATABASE" android:protectionLevel="normal"/>
-    <permission android:name="com.example.latihan.WRITE_DATABASE" android:protectionLevel="normal"/>
+    <permission android:name="com.example.latihan.mynotesapp.WRITE_DATABASE" android:protectionLevel="normal"/>
 
     <application
         android:allowBackup="true"
